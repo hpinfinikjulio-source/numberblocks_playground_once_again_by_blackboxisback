@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>NumberBlocks playground and stuff</title>
+    <link rel="stylesheet" href="style.css">
+    <script type="importmap">
+    {
+        "imports": {
+            "matter-js": "https://esm.sh/matter-js@0.19.0"
+        }
+    }
+    </script>
+</head>
+<body>
+    <div id="ui-container">
+        <div style="width:100%; display:flex; justify-content:center; gap:8px; pointer-events:auto; margin-bottom:6px; align-items:center;"></div>
+        <div class="button-row" id="spawn-buttons">
+            <!-- Buttons injected by JS -->
+        </div>
+        <div class="control-row">
+            <div id="arrangement-menu" title="Change how blocks stack">
+                <button class="arr-btn active" data-arr="auto">Auto</button>
+                <button class="arr-btn" data-arr="tall">Tall</button>
+                <button class="arr-btn" data-arr="wide">Wide</button>
+                <button class="arr-btn" data-arr="step">Step</button>
+                <button class="arr-btn" data-arr="most-rect">Most Rectangular</button>
+            </div>
+            <button id="shape-shift-btn">Shape Shift Mode</button>
+            <button id="explode-btn">Explode Mode</button>
+            <button id="rotate-btn">Rotate Mode</button>
+            <button id="clone-btn">Clone Mode</button>
+            <button id="mute-speech-btn">Mute Speech</button>
+
+            <button id="colorbox-btn">colurbux lol</button>
+            <button id="blackbox-btn">Blackbox</button>
+            <button id="grid-btn">Grid Mode</button>
+
+            <button id="time-btn">Stop Time</button>
+
+            <button id="reset-cam-btn">Reset View</button>
+            <button id="clear-btn">Clear All</button>
+
+            <!-- Now Playing / Music controls -->
+            <div id="music-panel" title="Music controls" style="pointer-events:auto; display:flex; align-items:center; gap:8px;">
+                <button id="music-btn" class="spawn-btn" style="min-width:88px; width:auto; height:38px; font-size:0.9rem;">Play Music</button>
+                <div id="now-playing" aria-live="polite" style="color:#000; font-weight:700; font-size:13px; background:rgba(255,255,255,0.7); padding:6px 10px; border-radius:12px; box-shadow:0 2px 4px rgba(0,0,0,0.08);">
+                    Now Playing: — 
+                </div>
+                <div id="music-seek-container" style="display:flex; flex-direction:column; gap:6px; margin-left:6px; min-width:220px; pointer-events:auto; align-items:flex-start;">
+                    <label for="music-seek" style="font-size:11px; font-weight:700; margin:0;">Position</label>
+                    <input id="music-seek" type="range" min="0" max="1" value="0" step="0.001" aria-label="Music position" style="width:220px;">
+                    <div id="music-time" style="font-size:11px; font-weight:700; color:#222;">0:00 / 0:00</div>
+                </div>
+                <div id="volume-control" style="display:flex; flex-direction:column; align-items:center; gap:6px; margin-left:6px; pointer-events:auto;">
+                    <label for="volume-slider" style="font-size:11px; font-weight:700; margin:0;">Volume</label>
+                    <input id="volume-slider" type="range" min="0" max="200" value="120" step="1" aria-label="Master volume" style="width:140px;">
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="canvas-container"></div>
+
+    <!-- Loading overlay / play gate -->
+    <div id="loading-overlay" role="dialog" aria-modal="true" aria-label="Loading screen">
+        <div class="loading-panel">
+            <div class="loading-circle" aria-hidden="true"></div>
+            <div class="loading-title">NumberBlocks playground</div>
+            <div class="loading-sub">Loading assets…</div>
+            <button id="play-btn" class="play-btn" aria-label="Play">Play</button>
+            <div id="loading-hint" class="loading-hint">Tap Play to begin</div>
+        </div>
+    </div>
+
+
+
+    <!-- Hot Page popup (added) -->
+    <div class="hot-popup-overlay" id="hot-popup" role="dialog" aria-modal="true" style="display:none;">
+      <div class="hot-popup-panel" role="document" aria-live="polite">
+        <button class="hot-popup-close" id="hot-popup-close" aria-label="Close">×</button>
+        <h2 class="hot-popup-title">Thanks For Hot Page!</h2>
+        <div class="hot-popup-image">
+          <img src="/IMG_1585.png" alt="Thanks image">
+        </div>
+        <div class="hot-popup-actions">
+          <button class="hot-popup-ok" id="hot-popup-ok">Nice!</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="height-indicator" aria-live="polite" title="Camera altitude in block units">Height: —</div>
+    <div id="fps-counter" aria-live="polite" title="Frames per second">FPS: —</div>
+
+    <!-- Simple bottom-left watermark -->
+    <div id="watermark">BlackBox's thing 2026</div>
+
+
+
+    <div id="suggestion-bar" role="region" aria-live="polite">
+        <div id="suggestion-inner">
+            <span class="suggestion-text">Give me your suggestions to update my simulation!</span>
+        </div>
+    </div>
+
+    <script type="module" src="main.js"></script>
+</body>
+</html>

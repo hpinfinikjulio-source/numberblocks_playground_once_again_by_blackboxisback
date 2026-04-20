@@ -1,0 +1,994 @@
+@font-face {
+    font-family: 'Learninglings';
+    src: url('Learninglings.ttf') format('truetype');
+}
+
+body, html {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-color: #a3e4ff;
+    font-family: 'Learninglings', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+#ui-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 8px 10px;
+    pointer-events: none;
+    /* Limit UI height so main scene fits one screen height on mobile.
+       Keep internal rows scrollable horizontally only (no vertical page scroll). */
+    max-height: 36vh;
+    box-sizing: border-box;
+    overflow: hidden; /* prevent vertical scrolling of the UI area */
+}
+
+/* Small informational banner under the UI container */
+#info-bar {
+    pointer-events: auto;
+    user-select: none;
+    background: linear-gradient(90deg, rgba(255,255,255,0.95), rgba(250,250,250,0.9));
+    color: #2b2b2b;
+    font-weight: 800;
+    padding: 8px 14px;
+    border-radius: 14px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+    margin-bottom: 8px;
+    font-family: 'Learninglings', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 0.95rem;
+    text-align: center;
+    max-width: min(96vw, 880px);
+}
+
+.button-row {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden; /* explicitly prevent vertical scrolling */
+    -webkit-overflow-scrolling: touch;
+    white-space: nowrap; /* keep items on a single horizontal line */
+    align-items: center; /* avoid vertical overflow from taller children */
+    width: 100vw;
+    justify-content: flex-start;
+    gap: 8px;
+    margin-bottom: 10px;
+    pointer-events: auto;
+    padding: 10px 20px;
+    box-sizing: border-box;
+}
+
+.button-row::-webkit-scrollbar {
+    height: 6px;
+}
+
+.button-row::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+}
+
+.button-row::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
+}
+
+.spawn-btn {
+    flex: 0 0 44px; /* Prevent shrinking in flex row */
+    width: 44px;
+    height: 44px;
+    border: none;
+    border-radius: 8px;
+    background: white;
+    box-shadow: 0 4px 0 #ccc;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 1.2rem;
+    transition: transform 0.1s, box-shadow 0.1s;
+    touch-action: manipulation;
+    color: white;
+    text-shadow: 
+        -1.5px -1.5px 0 #000,  
+         1.5px -1.5px 0 #000,
+        -1.5px  1.5px 0 #000,
+         1.5px  1.5px 0 #000;
+}
+
+.spawn-btn:active {
+    transform: translateY(2px);
+    box-shadow: 0 2px 0 #ccc;
+}
+
+/* Search input styling */
+#search-input {
+    background: rgba(255,255,255,0.95);
+    box-shadow: 0 4px 0 rgba(0,0,0,0.06);
+    outline: none;
+    font-weight: 700;
+}
+
+/* Highlight effect used when a matching spawn button is focused/found */
+.spawn-highlight {
+    box-shadow: 0 8px 0 rgba(255,215,0,0.85), 0 8px 24px rgba(255,200,0,0.08);
+    transform: translateY(-4px) scale(1.03);
+    transition: box-shadow 220ms, transform 180ms;
+}
+
+.control-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    pointer-events: auto;
+}
+
+#arrangement-menu {
+    display: flex;
+    background: rgba(255, 255, 255, 0.4);
+    padding: 4px;
+    border-radius: 25px;
+    gap: 4px;
+}
+
+.arr-btn {
+    border: none;
+    background: transparent;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-weight: bold;
+    font-family: 'Learninglings';
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+}
+
+.arr-btn.active {
+    background: white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+#time-btn {
+    background: #4caf50;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 4px 0 #2e7d32;
+    min-width: 100px;
+}
+
+#time-btn.active {
+    background: #2196f3;
+    box-shadow: 0 4px 0 #1565c0;
+}
+
+#reset-cam-btn {
+    background: #9c27b0;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 4px 0 #7b1fa2;
+}
+
+#reset-cam-btn:active {
+    transform: translateY(2px);
+    box-shadow: 0 2px 0 #7b1fa2;
+}
+
+#clear-btn {
+    background: #ff5555;
+    color: white;
+    border: none;
+    padding: 6px 12px; /* reduced vertical padding to make the button less tall */
+    height: 36px; /* explicit compact height for consistent layout */
+    line-height: 24px;
+    border-radius: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 3px 0 #990000; /* slightly smaller shadow to match reduced height */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 84px;
+}
+
+#clear-btn:active {
+    transform: translateY(1px);
+    box-shadow: 0 1px 0 #990000;
+}
+
+#shape-shift-btn {
+    background: #ff9800;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 4px 0 #e65100;
+}
+
+#shape-shift-btn.active {
+    background: #ffffff;
+    color: #ff9800;
+    box-shadow: 0 0 10px #ff9800;
+    transform: scale(1.05);
+}
+
+#explode-btn {
+    background: #f44336;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 4px 0 #b71c1c;
+}
+
+#explode-btn.active {
+    background: #ffffff;
+    color: #f44336;
+    box-shadow: 0 0 10px #f44336;
+    transform: scale(1.05);
+}
+
+#canvas-container {
+    width: 100%;
+    height: 100%;
+}
+
+canvas {
+    display: block;
+}
+
+/* Show custom pixel cursor only on devices that support hover/fine pointer
+   (desktops, laptops, and tablets with mouse/keyboard). Use default cursor
+   on touch-only devices to avoid a visible pointer on mobile. */
+@media (hover: hover) and (pointer: fine) {
+    body, canvas, #canvas-container, .spawn-btn, button {
+        cursor: url('./052dd0c023d9db3d5244875791c71c54-cursor-de-seta.webp') 0 0, auto;
+    }
+}
+
+/* Explicitly keep default cursor on touch devices */
+@media (hover: none), (pointer: coarse) {
+    body, canvas, #canvas-container, .spawn-btn, button {
+        cursor: default;
+    }
+}
+
+/* Watermark styling (animated rainbow + flying) */
+#watermark {
+    position: fixed;
+    right: 12px;
+    bottom: 12px;
+    z-index: 99999;
+    font-family: 'Learninglings', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    color: #fff;
+    /* animated rainbow background using the existing keyframe */
+    background: linear-gradient(90deg, #ff0044, #ff8800, #ffea00, #33cc33, #00bbff, #7a00ff, #ff0088);
+    background-size: 400% 100%;
+    padding: 8px 12px;
+    border-radius: 12px;
+    box-shadow: 0 8px 18px rgba(0,0,0,0.14);
+    pointer-events: none;
+    user-select: none;
+    -webkit-text-fill-color: initial;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    /* apply rainbow animation and a subtle flying/bob animation for motion */
+    animation: watermark-rainbow 6s linear infinite, watermark-fly 2800ms ease-in-out infinite;
+    transform-origin: right bottom;
+    display: inline-block;
+    text-shadow: 0 1px 0 rgba(0,0,0,0.25);
+}
+
+/* Keep the watermark compact on very small screens */
+@media (max-width: 360px) {
+    #watermark { font-size: 12px; padding: 6px 10px; right: 8px; bottom: 8px; border-radius: 10px; }
+}
+
+
+/* Keyframes for rainbow animation */
+@keyframes watermark-rainbow {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* Flying / bobbing animation for watermark to feel like it's flying */
+@keyframes watermark-fly {
+    0% {
+        transform: translate3d(0, 0, 0) rotate(-2deg) scale(1);
+        opacity: 0.95;
+    }
+    25% {
+        transform: translate3d(-6px, -6px, 0) rotate(1.5deg) scale(1.02);
+        opacity: 1;
+    }
+    50% {
+        transform: translate3d(-12px, -10px, 0) rotate(0.5deg) scale(1.03);
+        opacity: 0.98;
+    }
+    75% {
+        transform: translate3d(-6px, -6px, 0) rotate(-1deg) scale(1.01);
+        opacity: 1;
+    }
+    100% {
+        transform: translate3d(0, 0, 0) rotate(-2deg) scale(1);
+        opacity: 0.95;
+    }
+}
+
+/* Slightly reduce watermark size on very small screens to keep one-line layout */
+@media (max-width: 360px) {
+    #watermark { font-size: 11px; padding: 5px 8px; right: 8px; bottom: 6px; }
+}
+
+/* Slightly reduce watermark size on very small screens to keep one-line layout */
+@media (max-width: 360px) {
+    #watermark { font-size: 11px; padding: 5px 8px; right: 8px; bottom: 6px; }
+}
+
+/* Now Playing / Music controls */
+#music-panel {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Volume slider styling */
+#volume-control {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+#volume-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    height: 6px;
+    background: linear-gradient(90deg, #4caf50, #2196f3);
+    border-radius: 8px;
+    outline: none;
+}
+#volume-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    background: white;
+    border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    border: 2px solid rgba(0,0,0,0.12);
+    cursor: pointer;
+}
+#volume-slider::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    background: white;
+    border-radius: 50%;
+    border: 2px solid rgba(0,0,0,0.12);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    cursor: pointer;
+}
+
+#music-btn {
+    background: #1976d2;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 12px;
+    box-shadow: 0 4px 0 #0d47a1;
+    font-weight: 700;
+    cursor: pointer;
+    pointer-events: auto;
+}
+
+#music-btn.active {
+    background: #ef5350;
+    box-shadow: 0 4px 0 #b71c1c;
+}
+
+#now-playing {
+    min-width: 160px;
+    pointer-events: none;
+    user-select: none;
+    font-family: 'Learninglings', 'Segoe UI', Tahoma, Verdana, sans-serif;
+}
+
+/* Height indicator HUD */
+#height-indicator {
+    position: fixed;
+    right: 14px;
+    top: 74px;
+    z-index: 10000;
+    background: rgba(255,255,255,0.85);
+    color: #000;
+    padding: 8px 12px;
+    border-radius: 12px;
+    font-weight: 800;
+    font-family: 'Learninglings', sans-serif;
+    font-size: 13px;
+    box-shadow: 0 6px 12px rgba(0,0,0,0.12);
+    pointer-events: none;
+    user-select: none;
+    min-width: 110px;
+    text-align: center;
+}
+
+/* FPS counter HUD (paired with height indicator) */
+#fps-counter {
+    position: fixed;
+    right: 14px;
+    top: 114px;
+    z-index: 10000;
+    background: rgba(0,0,0,0.7);
+    color: #fff;
+    padding: 6px 10px;
+    border-radius: 10px;
+    font-weight: 800;
+    font-family: 'Learninglings', sans-serif;
+    font-size: 12px;
+    box-shadow: 0 6px 12px rgba(0,0,0,0.18);
+    pointer-events: none;
+    user-select: none;
+    min-width: 80px;
+    text-align: center;
+}
+
+/* Colorbox overlay UI for previewing and spawning costume SVG */
+.colorbox-overlay {
+    position: fixed;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 20000;
+    background: rgba(0,0,0,0.6);
+    pointer-events: auto;
+}
+.colorbox-panel {
+    background: #fff;
+    border-radius: 12px;
+    padding: 18px;
+    width: min(92vw, 520px);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.45);
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    align-items: center;
+}
+.colorbox-preview {
+    width: 320px;
+    height: 320px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background: linear-gradient(180deg, rgba(250,250,250,1), rgba(240,240,240,1));
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: inset 0 2px 6px rgba(0,0,0,0.06);
+}
+.colorbox-preview img {
+    max-width: 100%;
+    max-height: 100%;
+    display:block;
+}
+.colorbox-actions {
+    display:flex;
+    gap:10px;
+    width:100%;
+    justify-content:center;
+}
+.colorbox-actions button {
+    min-width: 100px;
+    padding: 8px 12px;
+    border-radius: 10px;
+    border: none;
+    font-weight: 700;
+    cursor: pointer;
+}
+.colorbox-actions .spawn {
+    background: #1976d2;
+    color: #fff;
+    box-shadow: 0 4px 0 #0d47a1;
+}
+.colorbox-actions .close {
+    background: #ddd;
+    color: #222;
+    box-shadow: 0 3px 0 rgba(0,0,0,0.08);
+}
+
+/* Info modal (one-screen friendly) */
+.info-modal {
+    position: fixed;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 30000;
+    background: rgba(0,0,0,0.5);
+    padding: 20px;
+    box-sizing: border-box;
+}
+.info-panel {
+    width: min(92vw, 520px);
+    background: #fff;
+    border-radius: 12px;
+    padding: 16px 18px 14px 18px;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.45);
+    color: #111;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: center;
+}
+.info-close {
+    position: absolute;
+    right: 10px;
+    top: 8px;
+    background: transparent;
+    border: none;
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 6px;
+    color: #333;
+}
+.info-close:focus { outline: 2px solid #1976d2; border-radius: 6px; }
+.info-panel h2 {
+    margin: 6px 0 0;
+    font-size: 1rem;
+    text-align: center;
+    font-weight: 800;
+}
+.info-text {
+    margin: 0;
+    font-size: 0.95rem;
+    text-align: center;
+    color: #222;
+}
+.info-actions { display:flex; gap:10px; margin-top:4px; }
+.info-btn {
+    padding: 8px 14px;
+    border-radius: 10px;
+    background: #1976d2;
+    color: #fff;
+    border: none;
+    font-weight: 700;
+    cursor: pointer;
+}
+.info-image-container {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 6px;
+}
+.info-image-container img {
+    max-width: 100%;
+    max-height: 60vh;
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+    outline: none;
+}
+
+/* Loading overlay + Play button (cartoony fullscreen redesign) */
+#loading-overlay {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(circle at 20% 20%, rgba(255,240,180,0.12), transparent 25%),
+                radial-gradient(circle at 80% 80%, rgba(180,235,255,0.10), transparent 25%),
+                linear-gradient(180deg, #ffd7a6 0%, #ffb3d9 40%, #fff1a8 100%);
+    z-index: 40000;
+    pointer-events: auto;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+}
+
+/* Big cartoony panel that still fits on small screens */
+.loading-panel {
+    width: min(96vw, 720px);
+    max-width: 720px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(255,255,255,0.96));
+    border-radius: 28px;
+    padding: 28px;
+    box-shadow: 0 30px 60px rgba(0,0,0,0.28), inset 0 -6px 18px rgba(0,0,0,0.04);
+    text-align: center;
+    display:flex;
+    flex-direction:column;
+    gap:16px;
+    align-items:center;
+    transform: translateY(0);
+    pointer-events: auto;
+    position: relative;
+    overflow: visible;
+}
+
+/* Playful mascot circle in the panel (pure CSS) */
+.loading-panel::before {
+    content: '';
+    position: absolute;
+    left: 22px;
+    top: -36px;
+    width: 92px;
+    height: 92px;
+    background: radial-gradient(circle at 35% 30%, #fff, #ffd8a6 10%, #ff9ab8 60%);
+    border-radius: 50%;
+    box-shadow: 0 8px 18px rgba(0,0,0,0.18), 0 2px 0 rgba(255,255,255,0.6) inset;
+    border: 6px solid rgba(255,255,255,0.9);
+    display: block;
+    z-index: 3;
+}
+
+/* Simple mascot face (eyes & smile) using pseudo elements */
+.loading-panel::after {
+    content: '';
+    position: absolute;
+    left: 46px;
+    top: -10px;
+    width: 44px;
+    height: 44px;
+    z-index: 4;
+    background:
+      radial-gradient(circle at 30% 35%, #000 6%, transparent 6%) 6px 8px / 12px 12px no-repeat,
+      radial-gradient(circle at 70% 35%, #000 6%, transparent 6%) 26px 8px / 12px 12px no-repeat,
+      linear-gradient(90deg, rgba(0,0,0,0) 0 0);
+    border-radius: 50%;
+    pointer-events: none;
+    /* smile drawn below via a small SVG data-uri would be heavier; use box-shadow trick for a curved smile */
+    box-shadow: 0 12px 0 0 rgba(0,0,0,0.08) inset;
+}
+
+/* Title and subtitle stylings made bold and cartoony */
+.loading-title {
+    font-size: 1.6rem;
+    font-weight: 900;
+    color: #3a1f78;
+    letter-spacing: 0.5px;
+    text-transform: none;
+    filter: drop-shadow(0 6px 6px rgba(0,0,0,0.12));
+    margin-top: 12px;
+}
+
+.loading-sub {
+    font-size: 1.05rem;
+    color: #5a347d;
+    margin: 0;
+}
+
+/* Cartoon confetti around panel */
+.loading-panel .confetti {
+    position: absolute;
+    inset: -18px -24px auto -24px;
+    height: 18px;
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* Play button: big, rounded, bouncy, with hand-drawn feel */
+.play-btn {
+    min-width: 220px;
+    padding: 16px 22px;
+    border-radius: 40px;
+    font-weight: 900;
+    font-size: 1.15rem;
+    background: linear-gradient(180deg, #ff6ea6 0%, #ff3b8f 60%, #ff1f6b 100%);
+    color: #fff;
+    border: 6px solid rgba(255,255,255,0.6);
+    box-shadow: 0 12px 0 #b21852, 0 6px 20px rgba(0,0,0,0.18);
+    cursor: pointer;
+    transition: transform 220ms cubic-bezier(.2,.9,.2,1), box-shadow 120ms;
+    transform-origin: center;
+    z-index: 6;
+    position: relative;
+    outline: none;
+}
+
+/* Bouncing idle animation to make it lively */
+@keyframes play-bounce {
+    0% { transform: translateY(0) scale(1); }
+    40% { transform: translateY(-8px) scale(1.03); }
+    65% { transform: translateY(-4px) scale(1.02); }
+    100% { transform: translateY(0) scale(1); }
+}
+.play-btn {
+    animation: play-bounce 2000ms ease-in-out infinite;
+}
+
+/* Hover/press effects */
+.play-btn:hover { transform: translateY(-6px) scale(1.02); box-shadow: 0 14px 0 #b21852, 0 10px 26px rgba(0,0,0,0.18); }
+.play-btn:active { transform: translateY(2px) scale(0.98); box-shadow: 0 6px 0 #b21852; }
+
+/* A chunky cartoon hint */
+.loading-hint {
+    font-size: 0.95rem;
+    color: #4a2b63;
+    background: rgba(255,255,255,0.7);
+    padding: 8px 12px;
+    border-radius: 18px;
+    box-shadow: 0 6px 0 rgba(0,0,0,0.06);
+    margin-bottom: 6px;
+}
+
+/* Confetti pieces (animated subtle drift) */
+@keyframes confetti-drift {
+    0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(14px) rotate(180deg); opacity: 0.45; }
+}
+.loading-panel .confetti-piece {
+    position: absolute;
+    width: 10px;
+    height: 16px;
+    border-radius: 2px;
+    opacity: 0.95;
+    animation: confetti-drift 2200ms linear infinite;
+}
+.loading-panel .confetti-piece.p1 { left: 6%; top: 6%; background: #FFEA7F; animation-delay: 0ms; }
+.loading-panel .confetti-piece.p2 { left: 20%; top: 4%; background: #FF7AC6; animation-delay: 120ms; transform-origin: center; }
+.loading-panel .confetti-piece.p3 { right: 18%; top: 8%; background: #7FE3FF; animation-delay: 240ms; }
+.loading-panel .confetti-piece.p4 { right: 6%; top: 6%; background: #B9FF7F; animation-delay: 60ms; }
+.loading-panel .confetti-piece.p5 { left: 50%; top: 2%; background: #FFA87F; animation-delay: 180ms; }
+
+/* Disabled state for the Play button: greyed out, no bounce, not clickable */
+.play-btn:disabled {
+    background: #cccccc !important;
+    color: #6b6b6b !important;
+    box-shadow: none !important;
+    cursor: default !important;
+    animation: none !important;
+    transform: none !important;
+    border-color: rgba(0,0,0,0.08) !important;
+    opacity: 0.95;
+}
+
+/* Hot Page popup styles */
+.hot-popup-overlay {
+    position: fixed;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,0.6);
+    z-index: 50000;
+    pointer-events: auto;
+    padding: 16px;
+    box-sizing: border-box;
+}
+.hot-popup-panel {
+    width: min(92vw, 520px);
+    background: #fff;
+    border-radius: 14px;
+    padding: 16px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.45);
+    text-align: center;
+    position: relative;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+    align-items:center;
+}
+.hot-popup-close {
+    position: absolute;
+    right: 8px;
+    top: 6px;
+    background: transparent;
+    border: none;
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 6px;
+    color: #333;
+}
+.hot-popup-title {
+    margin: 6px 0 0;
+    font-size: 1.2rem;
+    font-weight: 900;
+    color: #2b2b2b;
+}
+.hot-popup-image {
+    width: min(86vw, 420px);
+    max-height: 52vh;
+    overflow: hidden;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background: linear-gradient(180deg, #fff, #fafafa);
+    border-radius: 8px;
+    padding: 8px;
+    box-sizing: border-box;
+}
+.hot-popup-image img {
+    max-width: 100%;
+    max-height: 100%;
+    display:block;
+    border-radius: 6px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+}
+.hot-popup-actions {
+    display:flex;
+    gap:10px;
+    justify-content:center;
+    width:100%;
+}
+.hot-popup-actions .hot-popup-ok {
+    min-width: 120px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: none;
+    font-weight: 800;
+    cursor: pointer;
+    background: #1976d2;
+    color: #fff;
+    box-shadow: 0 6px 0 #0d47a1;
+}
+
+/* Make the overlay fully hidden when .hidden applied */
+#loading-overlay.hidden { display:none; }
+
+/* Loading circle (small animated spinner shown above the panel title) */
+.loading-panel {
+    position: relative; /* ensure the spinner can be positioned relative to panel */
+}
+/* Default spinner */
+.loading-circle {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    display: block;
+    margin: 0 auto 6px;
+    box-sizing: border-box;
+    border: 8px solid rgba(255,255,255,0.62);
+    border-top-color: #FFD700; /* bright accent for visibility */
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12), inset 0 -6px 12px rgba(255,255,255,0.06);
+    animation: loading-spin 900ms linear infinite;
+    will-change: transform;
+    overflow: hidden;
+    position: relative;
+}
+
+/* Checked state: when we swap the spinner for a check SVG we remove spinner visuals */
+.loading-circle.checked,
+.loading-circle.ready {
+    animation: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+}
+
+/* Make any inline SVG inside the loader scale neatly and get a slight pop */
+.loading-circle svg {
+    display: block;
+    width: 72px;
+    height: 72px;
+    margin: 0;
+    transform-origin: 50% 50%;
+    filter: drop-shadow(0 6px 8px rgba(46,125,50,0.18));
+}
+
+/* Provide a subtle entrance animation class in case JS toggles it later */
+@keyframes loading-check-pop {
+    0% { transform: scale(0.6); opacity: 0; }
+    60% { transform: scale(1.08); opacity: 1; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+/* Slight pulse to the spinner on each rotation for a bouncy feel */
+@keyframes loading-spin {
+    0%   { transform: rotate(0deg) scale(0.98); }
+    50%  { transform: rotate(180deg) scale(1.02); }
+    100% { transform: rotate(360deg) scale(0.98); }
+}
+
+/* Ensure small screens still look good */
+@media (max-width: 420px) {
+    .loading-panel::before { left: 12px; top: -32px; width: 72px; height: 72px; }
+    .loading-panel::after { left: 34px; top: -4px; width: 36px; height: 36px; }
+    .loading-panel { padding: 18px; border-radius: 20px; }
+    .play-btn { min-width: 160px; padding: 12px 16px; font-size: 1rem; }
+    .loading-title { font-size: 1.25rem; }
+}
+
+/* Bottom suggestion bar */
+#suggestion-bar {
+    position: fixed;
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+    z-index: 60000;
+    pointer-events: auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+#suggestion-inner {
+    width: min(96vw, 980px);
+    background: linear-gradient(90deg, rgba(255,255,255,0.95), rgba(250,250,250,0.95));
+    box-shadow: 0 12px 36px rgba(0,0,0,0.20);
+    border-radius: 14px;
+    padding: 10px 14px;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    justify-content: space-between;
+    box-sizing: border-box;
+}
+.suggestion-text {
+    font-family: 'Learninglings', sans-serif;
+    font-weight: 800;
+    color: #1b1b1b;
+    font-size: 14px;
+    line-height: 1;
+    display: inline-block;
+    padding-right: 8px;
+    flex: 1 1 auto;
+    text-align: left;
+}
+#suggestion-close {
+    min-width: 40px;
+    height: 36px;
+    background: #ff6b6b;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 4px 0 #b04242;
+    cursor: pointer;
+    font-weight: 900;
+    font-size: 14px;
+    flex: 0 0 auto;
+    padding: 0 8px;
+}
+#suggestion-close:active { transform: translateY(2px); box-shadow: 0 2px 0 #b04242; }
+
+/* Hide bar when .hidden */
+#suggestion-bar.hidden { display: none; }
+
+/* Hand-drawn button style for unusual long tokens (skewed, textured, pen-like) */
+.hand-drawn {
+    background: linear-gradient(180deg, #fff9f0 0%, #fff0e6 100%);
+    color: #2b2b2b;
+    border: 2px solid rgba(60, 40, 30, 0.18);
+    box-shadow: 0 6px 0 rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.6);
+    font-family: 'Learninglings', 'Comic Sans MS', 'Bradley Hand', 'Brush Script MT', cursive;
+    font-style: italic;
+    font-weight: 800;
+    transform: skew(-6deg) rotate(-2deg);
+    text-shadow: -1px -1px 0 rgba(255,255,255,0.6), 1px 1px 0 rgba(0,0,0,0.06);
+    padding: 8px 12px;
+    min-width: 88px;
+    width: auto;
+    letter-spacing: 0.6px;
+    background-image: linear-gradient(135deg, rgba(0,0,0,0.02) 0 10%, transparent 10% 100%);
+    border-radius: 10px;
+    transition: transform 120ms ease;
+}
+.hand-drawn:active {
+    transform: translateY(2px) skew(-6deg) rotate(-2deg);
+    box-shadow: 0 3px 0 rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.4);
+}
+
+/* Slightly smaller on very small screens */
+@media (max-width: 360px) {
+    #suggestion-inner { padding: 8px 10px; border-radius: 12px; }
+    .suggestion-text { font-size: 13px; }
+    #suggestion-close { height: 34px; min-width: 36px; font-size: 13px; }
+}
